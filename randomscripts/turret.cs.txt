@@ -1,0 +1,91 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class TurretProjectile : MonoBehaviour
+{
+
+    [SerializeField] private Transform projectileSpawnPosition;
+    [SerializeField] private float spreadRange;
+
+     private ObjectPooler _pooler;
+     private Projectile _currentProjectileLoaded;
+     private Turret _turret;
+     [SerializeField] private float maxDamage = 10f;
+     [SerializeField] private float minDamage = 50f;
+     
+     public float Damage { get; set; }
+     
+     [SerializeField] private float delayBtwnAttacks = 2f;
+
+
+     
+     private float _nextAttackTime;
+
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        _pooler=GetComponent<ObjectPooler>();
+        _turret=GetComponent<Turret>();
+        Damage = (int) UnityEngine.Random.Range(minDamage,maxDamage);
+       
+
+
+        
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        
+    
+
+         if(Time.time > _nextAttackTime ){
+
+              if (_turret.CurrentEnemyTarget != null)
+            {
+                Vector3 dirToTarget = _turret.CurrentEnemyTarget.transform.position - transform.position;
+                FireProjectile(dirToTarget);
+            }
+
+         
+
+            _nextAttackTime=Time.time+delayBtwnAttacks;
+
+         }
+        
+    }
+
+        private void FireProjectile(Vector3 direction)
+    {
+        GameObject instance = _pooler.GetInstanceFromPool();
+        instance.transform.position = projectileSpawnPosition.position;
+
+        Projectile projectile = instance.GetComponent<Projectile>();
+        projectile.Direction = direction;
+        projectile.Damage = Damage;
+
+
+            float randomSpread = UnityEngine.Random.Range(-spreadRange, spreadRange);
+            Vector3 spread = new Vector3(0f, 0f, randomSpread);
+            Quaternion spreadValue = Quaternion.Euler(spread);
+            Vector2 newDirection = spreadValue * direction;
+            projectile.Direction = newDirection;
+    
+        
+        instance.SetActive(true);
+    }
+
+    public void ResetTurretProjectile(){
+         _currentProjectileLoaded = null;
+
+     }
+
+     private bool IsTurretEmpty(){
+         return _currentProjectileLoaded == null;
+     }
+
+
+}
